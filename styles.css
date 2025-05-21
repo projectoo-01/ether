@@ -13,16 +13,13 @@ body {
   justify-content: center;
   align-items: center;
   padding: 2rem;
+    background-image: url('https://res.cloudinary.com/djmffrvpg/image/upload/v1747856333/bln-4_w7h5lv.png'); 
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
-
-#myVideo {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  min-width: 100%;
-  min-height: 100%;
-}
-
+ 
 .container {
   max-width: 800px;
   text-align: center;
@@ -115,14 +112,11 @@ body {
 }
 
 @media (max-width: 600px) {
-    #myVideo {
-    display: none; 
-  }
   
   body {
     background-color: black; 
     background-image: url('https://res.cloudinary.com/djmffrvpg/image/upload/v1747856333/bln-4_w7h5lv.png'); 
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
