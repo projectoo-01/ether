@@ -339,7 +339,7 @@ section {
     .portfolio-grid-m { grid-template-columns: 1fr; }
     .portfolio-slide { grid-template-columns: repeat(2, 1fr); }
       body {
-    padding: 0.75;
+    padding: 0;
   }
 }
 
