@@ -219,200 +219,204 @@
       </div>
     </div>
   </div>
+<script src="https://cdn.forminit.com/v1/forminit.js"></script>
+<script src="script.js"></script>
+<script>
+  const SUPABASE_URL = 'https://icdroraadrpeciabzqtq.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_PnszL8dHmLj1CgMbgnrooA_r6LyFtAz';
+  const BUCKET = 'ore-mi';
+  const VALIDATE_URL = `${SUPABASE_URL}/functions/v1/validate-submission`;
 
-  <script src="https://cdn.forminit.com/v1/forminit.js"></script>
-  <script src="script.js"></script>
-  <script>
-    const SUPABASE_URL = 'https://icdroraadrpeciabzqtq.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_PnszL8dHmLj1CgMbgnrooA_r6LyFtAz';
-    const BUCKET = 'ore-mi';
+  const PRODUCTS = {
+  poster: {
+    name: 'Poster',
+    desc: "Blu, 16 x 20 in.<br><br>New York didn't wait forever.<br>Neither did Blu.<br>Three rings. One face that never flinched.<br><br></p>",
+    price: '$65.00',
+    image: 'https://res.cloudinary.com/djmffrvpg/image/upload/v1782500531/Stool-Mockup_krixfr.png',
+    link: 'https://buy.stripe.com/14AfZh51P4GP8dZg4jaIM00',
+  },
+  sticker: {
+    name: 'Sticker Pack',
+    desc: "Wherever you go, Blu goes.<br><br> Pack: Die-cut, custom trim & Rectangle.<br><br> 3 x 2.97 in.",
+    price: '$8.00',
+    image: 'https://res.cloudinary.com/djmffrvpg/image/upload/v1781971808/sticker-view_qx98mh.jpg',
+    link: 'https://buy.stripe.com/28E6oH2TH4GP79V6tJaIM01',
+  }
+};
 
-    const PRODUCTS = {
-    poster: {
-      name: 'Poster',
-      desc: "Blu, 16 x 20 in.<br><br>New York didn't wait forever.<br>Neither did Blu.<br>Three rings. One face that never flinched.<br><br></p>",
-      price: '$65.00',
-      image: 'https://res.cloudinary.com/djmffrvpg/image/upload/v1782500531/Stool-Mockup_krixfr.png',
-      link: 'https://buy.stripe.com/14AfZh51P4GP8dZg4jaIM00',
-    },
-    sticker: {
-      name: 'Sticker Pack',
-      desc: "Wherever you go, Blu goes.<br><br> Pack: Die-cut, custom trim & Rectangle.<br><br> 3 x 2.97 in.",
-      price: '$8.00',
-      image: 'https://res.cloudinary.com/djmffrvpg/image/upload/v1781971808/sticker-view_qx98mh.jpg',
-      link: 'https://buy.stripe.com/28E6oH2TH4GP79V6tJaIM01',
-    }
-  };
+  document.querySelectorAll('.pdp-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.pdp-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const product = PRODUCTS[tab.dataset.product];
+      const hero = document.getElementById('pdpHero');
+      hero.style.opacity = '0';
+      setTimeout(() => { hero.src = product.image; hero.style.opacity = '1'; }, 150);
+      document.getElementById('pdpProductName').textContent = product.name;
+      document.getElementById('pdpProductDesc').innerHTML = product.desc;
+      document.getElementById('pdpPrice').textContent = product.price;
+      document.getElementById('pdpBuyBtn').href = product.link;
+    });
+  });
 
-    document.querySelectorAll('.pdp-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.pdp-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const product = PRODUCTS[tab.dataset.product];
-        const hero = document.getElementById('pdpHero');
+  document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('navMenu').classList.add('open'));
+  document.getElementById('closeBtn').addEventListener('click', () => document.getElementById('navMenu').classList.remove('open'));
+
+  document.querySelectorAll('.pdp-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      const hero = document.getElementById('pdpHero');
+      const type = thumb.dataset.type;
+      const src = thumb.dataset.src;
+      if (type !== 'video') {
         hero.style.opacity = '0';
-        setTimeout(() => { hero.src = product.image; hero.style.opacity = '1'; }, 150);
-        document.getElementById('pdpProductName').textContent = product.name;
-        document.getElementById('pdpProductDesc').innerHTML = product.desc;
-        document.getElementById('pdpPrice').textContent = product.price;
-        document.getElementById('pdpBuyBtn').href = product.link;
-      });
-    });
-
-    document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('navMenu').classList.add('open'));
-    document.getElementById('closeBtn').addEventListener('click', () => document.getElementById('navMenu').classList.remove('open'));
-
-    document.querySelectorAll('.pdp-thumb').forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-        const hero = document.getElementById('pdpHero');
-        const type = thumb.dataset.type;
-        const src = thumb.dataset.src;
-        if (type !== 'video') {
-          hero.style.opacity = '0';
-          setTimeout(() => { hero.src = src; hero.style.opacity = '1'; }, 150);
-        }
-      });
-    });
-
-    const PAGE_SIZE = 15;
-    let visibleCount = PAGE_SIZE;
-    let allSubmissions = [];
-
-    async function uploadImage(file) {
-      const ext = file.name.split('.').pop();
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${filename}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': file.type,
-        },
-        body: file,
-      });
-      if (!res.ok) { const err = await res.text(); console.error('Upload error:', err); throw new Error('Image upload failed'); }
-      return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filename}`;
-    }
-
-    async function saveSubmission(name, handle, link, imageUrl) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation',
-        },
-        body: JSON.stringify({ name, handle, link, image_url: imageUrl }),
-      });
-      if (!res.ok) { const err = await res.text(); console.error('Save error:', err); throw new Error('Failed to save submission'); }
-      return res.json();
-    }
-
-    async function fetchSubmissions() {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions?select=*&order=created_at.desc`, {
-        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-      });
-      if (!res.ok) throw new Error('Failed to fetch submissions');
-      return res.json();
-    }
-
-    const PLACEHOLDERS = [
-      { ph: true, name: 'Adaeze O.', handle: '@adaezo' },
-      { ph: true, name: 'Marcus T.', handle: '@marcust' },
-      { ph: true, name: 'Lola B.', handle: '@lolabee' },
-      { ph: true, name: 'Yemi A.', handle: '@yemi.a' },
-      { ph: true, name: 'Kai N.', handle: '@kai_n' },
-      { ph: true, name: 'Tolu S.', handle: '@tolu.s' },
-      { ph: true, name: 'Zara K.', handle: '@zarakk' },
-      { ph: true, name: 'Dami F.', handle: '@damif' },
-    ];
-
-    function makeCard(item, i) {
-      const card = document.createElement('div');
-      card.className = 'masonry-card';
-      card.style.animationDelay = `${i * 0.04}s`;
-      if (item.ph) {
-        card.innerHTML = `<div class="ph-img"></div><div class="masonry-card-info"><div class="ph-name"></div><div class="ph-handle"></div></div>`;
-      } else {
-        const displayHandle = item.handle ? (item.handle.startsWith('@') ? item.handle : '@' + item.handle) : '';
-        const h = displayHandle && item.link
-          ? `<a class="masonry-card-handle" href="${item.link}" target="_blank" rel="noopener">${displayHandle}</a>`
-          : displayHandle ? `<span class="masonry-card-handle">${displayHandle}</span>` : '';
-        card.innerHTML = `<img src="${item.image_url}" alt="Sticker by ${item.name}" loading="lazy"><div class="masonry-card-info"><p class="masonry-card-name">${item.name}</p>${h}</div>`;
-      }
-      return card;
-    }
-
-    function renderFeed(reset) {
-      if (reset) visibleCount = PAGE_SIZE;
-      const feed = document.getElementById('masonryFeed');
-      const meta = document.getElementById('feedMeta');
-      const loadMoreBtn = document.getElementById('loadMoreBtn');
-      feed.innerHTML = '';
-      const isPlaceholder = allSubmissions.length === 0;
-      const items = isPlaceholder ? PLACEHOLDERS : allSubmissions;
-      meta.textContent = isPlaceholder ? 'Showing placeholders — be the first to post' : `${allSubmissions.length} submission${allSubmissions.length !== 1 ? 's' : ''} on the wall`;
-      items.slice(0, visibleCount).forEach((item, i) => feed.appendChild(makeCard(item, i)));
-      if (!isPlaceholder && visibleCount < items.length) {
-        loadMoreBtn.style.display = 'inline-block';
-        loadMoreBtn.textContent = `Load More (${items.length - visibleCount} remaining)`;
-      } else { loadMoreBtn.style.display = 'none'; }
-    }
-
-    document.getElementById('loadMoreBtn').addEventListener('click', () => { visibleCount += PAGE_SIZE; renderFeed(false); });
-
-    let selectedFile = null;
-
-    document.getElementById('fileInput').addEventListener('change', function () {
-      if (this.files[0]) { selectedFile = this.files[0]; document.getElementById('fileName').textContent = selectedFile.name; checkForm(); }
-    });
-
-    function checkForm() {
-      const name = document.getElementById('sub-name').value.trim();
-      document.getElementById('uploadSubmit').disabled = !(name && selectedFile);
-    }
-
-    document.getElementById('sub-name').addEventListener('input', checkForm);
-    document.getElementById('sub-handle').addEventListener('input', checkForm);
-
-    document.getElementById('uploadSubmit').addEventListener('click', async () => {
-      const name = document.getElementById('sub-name').value.trim();
-      const handle = document.getElementById('sub-handle').value.trim();
-      const link = document.getElementById('sub-link').value.trim();
-      const btn = document.getElementById('uploadSubmit');
-      const status = document.getElementById('uploadStatus');
-      if (!name || !selectedFile) return;
-      btn.disabled = true; btn.textContent = '...'; status.textContent = '';
-      try {
-        const imageUrl = await uploadImage(selectedFile);
-        await saveSubmission(name, handle, link, imageUrl);
-        allSubmissions = await fetchSubmissions();
-        renderFeed(true);
-        document.getElementById('sub-name').value = '';
-        document.getElementById('sub-handle').value = '';
-        document.getElementById('sub-link').value = '';
-        document.getElementById('fileInput').value = '';
-        document.getElementById('fileName').textContent = 'No file chosen';
-        selectedFile = null;
-        btn.textContent = 'Post'; btn.disabled = true;
-        status.textContent = "✓ You're on the wall.";
-        setTimeout(() => status.textContent = '', 3000);
-      } catch (err) {
-        console.error(err);
-        status.textContent = 'Something went wrong. Try again.';
-        btn.textContent = 'Post'; btn.disabled = false;
+        setTimeout(() => { hero.src = src; hero.style.opacity = '1'; }, 150);
       }
     });
+  });
 
-    (async () => {
-      try { allSubmissions = await fetchSubmissions(); }
-      catch (e) { console.warn('Could not load submissions:', e); allSubmissions = []; }
+  const PAGE_SIZE = 15;
+  let visibleCount = PAGE_SIZE;
+  let allSubmissions = [];
+
+  async function uploadImage(file) {
+    const ext = file.name.split('.').pop();
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${filename}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+    if (!res.ok) { const err = await res.text(); console.error('Upload error:', err); throw new Error('Image upload failed'); }
+    return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filename}`;
+  }
+
+  async function saveSubmission(name, handle, link, imageUrl) {
+    const res = await fetch(VALIDATE_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, handle, link, image_url: imageUrl }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.error === 'invalid_url') throw new Error("That link doesn't look valid — check it and try again.");
+      if (data.error === 'unsafe_url') throw new Error("That link didn't pass our safety check.");
+      throw new Error('Failed to save submission');
+    }
+    return data;
+  }
+
+  async function fetchSubmissions() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions?select=*&order=created_at.desc`, {
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+    });
+    if (!res.ok) throw new Error('Failed to fetch submissions');
+    return res.json();
+  }
+
+  const PLACEHOLDERS = [
+    { ph: true, name: 'Adaeze O.', handle: '@adaezo' },
+    { ph: true, name: 'Marcus T.', handle: '@marcust' },
+    { ph: true, name: 'Lola B.', handle: '@lolabee' },
+    { ph: true, name: 'Yemi A.', handle: '@yemi.a' },
+    { ph: true, name: 'Kai N.', handle: '@kai_n' },
+    { ph: true, name: 'Tolu S.', handle: '@tolu.s' },
+    { ph: true, name: 'Zara K.', handle: '@zarakk' },
+    { ph: true, name: 'Dami F.', handle: '@damif' },
+  ];
+
+  function makeCard(item, i) {
+    const card = document.createElement('div');
+    card.className = 'masonry-card';
+    card.style.animationDelay = `${i * 0.04}s`;
+    if (item.ph) {
+      card.innerHTML = `<div class="ph-img"></div><div class="masonry-card-info"><div class="ph-name"></div><div class="ph-handle"></div></div>`;
+    } else {
+      const displayHandle = item.handle ? (item.handle.startsWith('@') ? item.handle : '@' + item.handle) : '';
+      const h = displayHandle && item.link
+        ? `<a class="masonry-card-handle" href="${item.link}" target="_blank" rel="noopener">${displayHandle}</a>`
+        : displayHandle ? `<span class="masonry-card-handle">${displayHandle}</span>` : '';
+      card.innerHTML = `<img src="${item.image_url}" alt="Sticker by ${item.name}" loading="lazy"><div class="masonry-card-info"><p class="masonry-card-name">${item.name}</p>${h}</div>`;
+    }
+    return card;
+  }
+
+  function renderFeed(reset) {
+    if (reset) visibleCount = PAGE_SIZE;
+    const feed = document.getElementById('masonryFeed');
+    const meta = document.getElementById('feedMeta');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    feed.innerHTML = '';
+    const isPlaceholder = allSubmissions.length === 0;
+    const items = isPlaceholder ? PLACEHOLDERS : allSubmissions;
+    meta.textContent = isPlaceholder ? 'Showing placeholders — be the first to post' : `${allSubmissions.length} submission${allSubmissions.length !== 1 ? 's' : ''} on the wall`;
+    items.slice(0, visibleCount).forEach((item, i) => feed.appendChild(makeCard(item, i)));
+    if (!isPlaceholder && visibleCount < items.length) {
+      loadMoreBtn.style.display = 'inline-block';
+      loadMoreBtn.textContent = `Load More (${items.length - visibleCount} remaining)`;
+    } else { loadMoreBtn.style.display = 'none'; }
+  }
+
+  document.getElementById('loadMoreBtn').addEventListener('click', () => { visibleCount += PAGE_SIZE; renderFeed(false); });
+
+  let selectedFile = null;
+
+  document.getElementById('fileInput').addEventListener('change', function () {
+    if (this.files[0]) { selectedFile = this.files[0]; document.getElementById('fileName').textContent = selectedFile.name; checkForm(); }
+  });
+
+  function checkForm() {
+    const name = document.getElementById('sub-name').value.trim();
+    document.getElementById('uploadSubmit').disabled = !(name && selectedFile);
+  }
+
+  document.getElementById('sub-name').addEventListener('input', checkForm);
+  document.getElementById('sub-handle').addEventListener('input', checkForm);
+
+  document.getElementById('uploadSubmit').addEventListener('click', async () => {
+    const name = document.getElementById('sub-name').value.trim();
+    const handle = document.getElementById('sub-handle').value.trim();
+    const link = document.getElementById('sub-link').value.trim();
+    const btn = document.getElementById('uploadSubmit');
+    const status = document.getElementById('uploadStatus');
+    if (!name || !selectedFile) return;
+    btn.disabled = true; btn.textContent = '...'; status.textContent = '';
+    try {
+      const imageUrl = await uploadImage(selectedFile);
+      await saveSubmission(name, handle, link, imageUrl);
+      allSubmissions = await fetchSubmissions();
       renderFeed(true);
-    })();
-  </script>
+      document.getElementById('sub-name').value = '';
+      document.getElementById('sub-handle').value = '';
+      document.getElementById('sub-link').value = '';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileName').textContent = 'No file chosen';
+      selectedFile = null;
+      btn.textContent = 'Post'; btn.disabled = true;
+      status.textContent = "✓ You're on the wall.";
+      setTimeout(() => status.textContent = '', 3000);
+    } catch (err) {
+      console.error(err);
+      status.textContent = err.message || 'Something went wrong. Try again.';
+      btn.textContent = 'Post'; btn.disabled = false;
+    }
+  });
+
+  (async () => {
+    try { allSubmissions = await fetchSubmissions(); }
+    catch (e) { console.warn('Could not load submissions:', e); allSubmissions = []; }
+    renderFeed(true);
+  })();
+</script>
 
 </body>
 
